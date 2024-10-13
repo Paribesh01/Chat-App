@@ -1,10 +1,15 @@
 import WebSocket from 'ws';
 import { v4 as uuidv4 } from 'uuid';
+import { uniqueNamesGenerator, Config, adjectives, colors, animals } from 'unique-names-generator';
+
+
+
 
 interface Game {
     roomid: string;
     players: string[];
     message: Record<string, string>[];
+    admin: string;
 }
 
 export class GameManager {
@@ -17,7 +22,7 @@ export class GameManager {
     }
 
     addUser(ws: WebSocket) {
-        const userId = uuidv4();
+        const userId = this.nameGenerator();
         this.users.push({ ws, userId });
 
         console.log(`User added with ID: ${userId}`);
@@ -64,7 +69,8 @@ export class GameManager {
         const newGame: Game = {
             roomid,
             players: [userId],
-            message: []
+            message: [],
+            admin: userId
         };
         this.games.push(newGame);
         this.broadcastToAll({ status: "Rooms", rooms: this.games })
@@ -152,5 +158,15 @@ export class GameManager {
             this.users.forEach(playerId => this.notifyUser(playerId.userId, message));
         }
 
+    }
+    nameGenerator() {
+        const config: Config = {
+            dictionaries: [adjectives, colors, animals],
+            separator: ' ',
+            style: 'capital',
+            length: 2
+        };
+        const unique = uniqueNamesGenerator(config);
+        return unique
     }
 }
